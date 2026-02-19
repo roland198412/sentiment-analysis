@@ -3,10 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
-	"github.com/jonreiter/govader"
 	"log"
 	"os"
+
+	"github.com/go-sql-driver/mysql"
+	"github.com/jonreiter/govader"
 )
 
 var db *sql.DB
@@ -52,8 +53,8 @@ func main() {
 		//fmt.Println("Compound score:", sentiment.Compound)
 		//fmt.Println("Positive score:", sentiment.Positive)
 		//fmt.Println("Neutral score:", sentiment.Neutral)
-		if sentiment.Negative > 0 {
-			fmt.Printf("%s: %f\n", row.Value, sentiment.Negative)
+		if sentiment.Negative > 0.2 && sentiment.Compound < -0.05 {
+			fmt.Printf("NEGATIVE: %s: %f\n", row.Value, sentiment.Negative)
 		}
 	}
 
