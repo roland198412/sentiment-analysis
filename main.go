@@ -28,6 +28,9 @@ func main() {
 	tableName := os.Getenv("TABLE_NAME")
 	tableColumnName := os.Getenv("TABLE_COLUMN_NAME")
 
+	// Option to delete negative rows
+	enableDeleteNegativeRow := os.Getenv("ENABLE_DELETE_NEGATIVE_ROW") // "true" to delete
+
 	// Get a database handle.
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
@@ -49,12 +52,20 @@ func main() {
 	analyzer := govader.NewSentimentIntensityAnalyzer()
 
 	for _, row := range data {
+
 		sentiment := analyzer.PolarityScores(row.Value)
 		//fmt.Println("Compound score:", sentiment.Compound)
 		//fmt.Println("Positive score:", sentiment.Positive)
 		//fmt.Println("Neutral score:", sentiment.Neutral)
 		if sentiment.Negative > 0.2 && sentiment.Compound < -0.05 {
 			fmt.Printf("NEGATIVE: %s: %f\n", row.Value, sentiment.Negative)
+			if enableDeleteNegativeRow == "true" {
+				if err := deleteRowByID(tableName, row.ID); err != nil {
+					log.Printf("Failed to delete row ID %d: %v", row.ID, err)
+				} else {
+					log.Printf("Deleted row ID %d", row.ID)
+				}
+			}
 		}
 	}
 
@@ -83,4 +94,9 @@ func getColumnData(tableName, columnName string) ([]Data, error) {
 	}
 
 	return data, nil
+}
+
+func deleteRowByID(tableName string, id int64) error {
+	_, err := db.Exec("DELETE FROM "+tableName+" WHERE id = ?", id)
+	return err
 }
